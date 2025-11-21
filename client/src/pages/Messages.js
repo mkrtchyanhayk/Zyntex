@@ -157,7 +157,6 @@ export default function Messages() {
     return () => container.removeEventListener('scroll', listener);
   }, [handleMessagesScroll, id]);
 
-  const lastMessageCountRef = useRef(0);
   useEffect(() => {
     if (messages.length && messageListRef.current) {
       const container = messageListRef.current;
