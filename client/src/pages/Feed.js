@@ -96,8 +96,10 @@ export default function Feed({ token }) {
     try {
       setLoading(true);
       const { data } = await api.get('/api/posts/feed');
+      console.log('Fetched data:', data);
       setPosts(data);
     } catch (err) {
+      console.error('Failed to load feed:', err);
       setError('Failed to load feed');
     } finally {
       setLoading(false);
@@ -115,6 +117,8 @@ export default function Feed({ token }) {
       }
     };
   }, []);
+
+  console.log('Render state:', { loading, posts, error });
 
   const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 

@@ -10,6 +10,7 @@ import Groups from './pages/Groups';
 import Mailbox from './pages/Mailbox';
 import ForgotPassword from './pages/ForgotPassword';
 import useMe from './hooks/useMe';
+import useTheme from './hooks/useTheme';
 import Spinner from './components/Spinner';
 import Changelog from './components/Changelog';
 import api from './api';
@@ -40,7 +41,7 @@ export default function App() {
       try {
         const { data } = await api.get('/api/invitations/counts');
         setInviteCounts(data);
-      } catch {}
+      } catch { }
     };
     if (token) {
       load();
@@ -167,9 +168,8 @@ export default function App() {
               <Link
                 key={`${link.to}-mobile`}
                 to={link.to}
-                className={`flex-1 text-center text-xs py-2 rounded-full border transition ${
-                  isActive(link.to) ? 'border-white/40 text-white bg-white/10' : 'border-white/10 text-white/70'
-                }`}
+                className={`flex-1 text-center text-xs py-2 rounded-full border transition ${isActive(link.to) ? 'border-white/40 text-white bg-white/10' : 'border-white/10 text-white/70'
+                  }`}
               >
                 {link.label}
               </Link>
@@ -177,7 +177,7 @@ export default function App() {
           </div>
         </div>
       </header>
-        <main className="relative z-10 max-w-6xl mx-auto px-4 py-10 page-shell page-fade">
+      <main className="relative z-10 max-w-6xl mx-auto px-4 py-10 page-shell page-fade">
         <Routes>
           <Route path="/" element={<Feed token={token} />} />
           <Route path="/register" element={<Register onAuth={(t) => { setToken(t); navigate('/'); }} />} />

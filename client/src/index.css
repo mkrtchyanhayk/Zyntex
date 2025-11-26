@@ -271,12 +271,10 @@ body::after {
 }
 
 .anim-section {
-  opacity: 0;
   animation: fadeUp 0.9s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 .stagger-parent > .stagger-item {
-  opacity: 0;
   transform: translateY(24px) scale(0.98);
   animation: fadeUp 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   animation-delay: var(--delay, 0s);
@@ -315,7 +313,6 @@ body::after {
 }
 
 .card-rise {
-  opacity: 0;
   transform: translateY(32px) scale(0.98);
   animation: fadeUp 0.95s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
