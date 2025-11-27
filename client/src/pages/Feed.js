@@ -305,16 +305,16 @@ export default function Feed({ token }) {
                     >
                       <div className="relative">
                         <button
-                          className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 text-pink-200 hover:bg-white/20 transition disabled:opacity-40"
+                          className="flex items-center gap-2 px-2 py-2 rounded-full text-secondary hover:bg-white/5 transition disabled:opacity-40"
                           onClick={() => sendReaction(post._id)}
                           disabled={!token}
                         >
-                          <span role="img" aria-label="reaction">{userReaction || '💜'}</span>
-                          <span>{likeDisplay}</span>
+                          <span role="img" aria-label="reaction" className={userReaction ? 'grayscale-0' : 'grayscale opacity-60'}>{userReaction || '👍'}</span>
+                          <span className={userReaction ? 'text-pink-400 font-medium' : ''}>Like</span>
                         </button>
                         {pickerPost === post._id && (
                           <div
-                            className="reaction-popover absolute -top-16 left-0 bg-slate-900/90 backdrop-blur rounded-full px-3 py-2 flex gap-2 border border-white/10 shadow-2xl"
+                            className="reaction-popover absolute -top-14 left-0 bg-white/10 backdrop-blur-md rounded-full px-2 py-1 flex gap-1 border border-white/20 shadow-xl animate-in fade-in zoom-in duration-200"
                             onMouseEnter={() => handlePickerEnter(post._id)}
                             onMouseLeave={handlePickerLeave}
                           >
@@ -322,7 +322,7 @@ export default function Feed({ token }) {
                               <button
                                 key={emoji}
                                 onClick={() => sendReaction(post._id, emoji)}
-                                className="reaction-option text-xl disabled:opacity-40"
+                                className="w-9 h-9 flex items-center justify-center text-2xl hover:scale-125 transition-transform active:scale-95"
                                 disabled={!token}
                               >
                                 {emoji}
@@ -331,109 +331,93 @@ export default function Feed({ token }) {
                           </div>
                         )}
                       </div>
-                      {total > 0 && (
-                        <div className="flex items-center gap-3 text-xs text-secondary">
-                          {showHiddenMessage ? (
-                            <span className="text-secondary/50 text-[11px] uppercase tracking-[0.2em]">Reactions hidden by author</span>
-                          ) : (
+                      <div className="flex items-center gap-3 text-xs text-secondary">
+                        <div className="flex items-center gap-1 hover:underline cursor-pointer" onClick={() => openReactionViewer(post._id)}>
+                          {total > 0 && (
                             <>
-                              <div className="flex items-center gap-2">
-                                <div className="flex items-center">
-                                  {leadingReactions.map((item, idx) => (
-                                    <span
-                                      key={item.emoji}
-                                      className={`w-6 h-6 rounded-full bg-surface border border-white/10 flex items-center justify-center text-sm shadow-sm ${idx > 0 ? '-ml-2' : ''} z-${10 - idx}`}
-                                    >
-                                      {item.emoji}
-                                    </span>
-                                  ))}
-                                </div>
-                                <span className="text-sm text-secondary font-medium">{total}</span>
+                              <div className="flex items-center -space-x-1">
+                                {leadingReactions.map((item) => (
+                                  <span key={item.emoji} className="w-4 h-4 flex items-center justify-center bg-surface rounded-full ring-2 ring-surface text-[10px]">
+                                    {item.emoji}
+                                  </span>
+                                ))}
                               </div>
-                              {canViewReactions && (
-                                <button
-                                  className="underline decoration-dotted hover:text-primary"
-                                  onClick={() => openReactionViewer(post._id)}
-                                  disabled={!token}
-                                >
-                                  View all
-                                </button>
-                              )}
+                              <span>{total}</span>
                             </>
                           )}
                         </div>
-                      )}
+                        {(total > 0 || post.commentCount > 0) && <span>•</span>}
+                        <div className="hover:underline cursor-pointer" onClick={() => toggleComments(post._id)}>
+                          {post.commentCount > 0 ? `${post.commentCount} comments` : ''}
+                        </div>
+                      </div>
                     </div>
-                    <span className="text-xs text-secondary">{post.textContent ? 'Text + Media' : 'Photo drop'}</span>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-4 text-sm text-secondary">
-                    <button className="hover:text-primary transition" onClick={() => toggleComments(post._id)}>
-                      {commentsOpen[post._id] ? 'Hide comments' : 'View comments'}
-                    </button>
-                    {me?._id === post.author?._id && (
-                      <button
-                        className="text-xs text-secondary/50 hover:text-primary transition"
-                        onClick={() => toggleHideLikes(post._id, !post.hideLikeCount)}
-                      >
-                        {post.hideLikeCount ? 'Show reaction counts' : 'Hide reaction counts'}
+                    <div className="flex flex-wrap items-center gap-4 text-sm text-secondary border-t border-white/5 pt-2">
+                      <button className="flex-1 flex items-center justify-center gap-2 py-1 hover:bg-white/5 rounded-lg transition" onClick={() => toggleComments(post._id)}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                        Comment
                       </button>
+                      <button className="flex-1 flex items-center justify-center gap-2 py-1 hover:bg-white/5 rounded-lg transition">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                        Share
+                      </button>
+                    </div>
+                    {commentsOpen[post._id] && (
+                      <div className="space-y-3 border-t border-white/10 pt-3">
+                        {commentsLoading[post._id] ? (
+                          <p className="text-secondary text-sm">Loading comments...</p>
+                        ) : (
+                          <>
+                            {(comments[post._id] || []).length === 0 && (
+                              <p className="text-secondary text-sm">Be the first to comment.</p>
+                            )}
+                            {(comments[post._id] || []).map((comment) => (
+                              <div key={comment._id} className="flex items-start gap-3">
+                                {comment.author?.avatarUrl ? (
+                                  <img src={getImageUrl(comment.author.avatarUrl)} alt="avatar" className="w-8 h-8 rounded-full object-cover" />
+                                ) : (
+                                  <div className="w-8 h-8 rounded-full bg-white/10" />
+                                )}
+                                <div className="bg-white/5 rounded-2xl px-3 py-2 flex-1">
+                                  <div className="text-xs text-secondary">@{comment.author?.username}</div>
+                                  <div className="text-primary text-sm">{comment.text}</div>
+                                </div>
+                                {comment.author?._id === me?._id && (
+                                  <button
+                                    onClick={() => deleteComment(post._id, comment._id)}
+                                    className="text-xs text-secondary/50 hover:text-primary"
+                                  >
+                                    Remove
+                                  </button>
+                                )}
+                              </div>
+                            ))}
+                          </>
+                        )}
+                        {token && (
+                          <form
+                            className="flex gap-2"
+                            onSubmit={(e) => {
+                              e.preventDefault();
+                              submitComment(post._id);
+                            }}
+                          >
+                            <input
+                              className="flex-1 input-focus text-primary placeholder-secondary/40"
+                              placeholder="Leave a comment..."
+                              value={commentInputs[post._id] || ''}
+                              onChange={(e) =>
+                                setCommentInputs((prev) => ({ ...prev, [post._id]: e.target.value }))
+                              }
+                            />
+                            <button className="neon-btn text-xs" type="submit">
+                              Comment
+                            </button>
+                          </form>
+                        )}
+                      </div>
                     )}
                   </div>
-                  {commentsOpen[post._id] && (
-                    <div className="space-y-3 border-t border-white/10 pt-3">
-                      {commentsLoading[post._id] ? (
-                        <p className="text-secondary text-sm">Loading comments...</p>
-                      ) : (
-                        <>
-                          {(comments[post._id] || []).length === 0 && (
-                            <p className="text-secondary text-sm">Be the first to comment.</p>
-                          )}
-                          {(comments[post._id] || []).map((comment) => (
-                            <div key={comment._id} className="flex items-start gap-3">
-                              {comment.author?.avatarUrl ? (
-                                <img src={getImageUrl(comment.author.avatarUrl)} alt="avatar" className="w-8 h-8 rounded-full object-cover" />
-                              ) : (
-                                <div className="w-8 h-8 rounded-full bg-white/10" />
-                              )}
-                              <div className="bg-white/5 rounded-2xl px-3 py-2 flex-1">
-                                <div className="text-xs text-secondary">@{comment.author?.username}</div>
-                                <div className="text-primary text-sm">{comment.text}</div>
-                              </div>
-                              {comment.author?._id === me?._id && (
-                                <button
-                                  onClick={() => deleteComment(post._id, comment._id)}
-                                  className="text-xs text-secondary/50 hover:text-primary"
-                                >
-                                  Remove
-                                </button>
-                              )}
-                            </div>
-                          ))}
-                        </>
-                      )}
-                      {token && (
-                        <form
-                          className="flex gap-2"
-                          onSubmit={(e) => {
-                            e.preventDefault();
-                            submitComment(post._id);
-                          }}
-                        >
-                          <input
-                            className="flex-1 input-focus text-primary placeholder-secondary/40"
-                            placeholder="Leave a comment..."
-                            value={commentInputs[post._id] || ''}
-                            onChange={(e) =>
-                              setCommentInputs((prev) => ({ ...prev, [post._id]: e.target.value }))
-                            }
-                          />
-                          <button className="neon-btn text-xs" type="submit">
-                            Comment
-                          </button>
-                        </form>
-                      )}
-                    </div>
-                  )}
                 </div>
               </div>
             </article>
@@ -537,6 +521,6 @@ export default function Feed({ token }) {
           </div>
         </div>
       </Modal>
-    </div>
+    </div >
   );
 }

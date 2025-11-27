@@ -90,10 +90,39 @@ export const createPost = async (req, res) => {
 
 export const getFeed = async (_req, res) => {
   try {
-    const posts = await Post.find()
-      .sort({ createdAt: -1 })
-      .populate('author', 'username displayName avatarUrl')
-      .lean();
+    const posts = await Post.aggregate([
+      { $sort: { createdAt: -1 } },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'author',
+          foreignField: '_id',
+          as: 'author'
+        }
+      },
+      { $unwind: '$author' },
+      {
+        $lookup: {
+          from: 'comments',
+          localField: '_id',
+          foreignField: 'post',
+          as: 'comments'
+        }
+      },
+      {
+        $addFields: {
+          commentCount: { $size: '$comments' }
+        }
+      },
+      {
+        $project: {
+          comments: 0,
+          'author.password': 0,
+          'author.email': 0
+        }
+      }
+    ]);
+
     res.json(posts);
   } catch (err) {
     res.status(500).json({ message: 'Failed to fetch feed', error: err.message });
