@@ -74,8 +74,8 @@ export default function Groups() {
     <div className="space-y-8 anim-section">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="card-rise">
-          <p className="text-xs uppercase tracking-[0.4em] text-white/60">Curate your circles</p>
-          <h1 className="text-3xl font-bold text-white">Groups</h1>
+          <p className="text-xs uppercase tracking-[0.4em] text-secondary/60">Curate your circles</p>
+          <h1 className="text-3xl font-bold text-primary">Groups</h1>
         </div>
         <button
           onClick={() => setShowCreate(true)}
@@ -100,24 +100,24 @@ export default function Groups() {
               {group.avatarUrl ? (
                 <img src={getImageUrl(group.avatarUrl)} alt="group" className="w-16 h-16 rounded-full mx-auto object-cover border border-white/20" />
               ) : (
-                <div className="w-16 h-16 rounded-full bg-white/15 mx-auto flex items-center justify-center text-white/70">✨</div>
+                <div className="w-16 h-16 rounded-full bg-white/15 mx-auto flex items-center justify-center text-secondary">✨</div>
               )}
               <div>
-                <div className="text-white font-semibold">{group.name}</div>
-                <div className="text-white/60 text-sm">{group.members.length} members</div>
+                <div className="text-primary font-semibold">{group.name}</div>
+                <div className="text-secondary text-sm">{group.members.length} members</div>
               </div>
             </div>
           </div>
         ))}
-        {groups.length === 0 && <p className="text-white/70">No groups yet</p>}
+        {groups.length === 0 && <p className="text-secondary">No groups yet</p>}
       </div>
 
       <Modal open={showCreate} onClose={() => { setShowCreate(false); setForm({ name: '', memberIds: [] }); setFile(null); }} title="Create Group">
         <form onSubmit={create} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Group Name</label>
+            <label className="block text-sm font-medium mb-1 text-primary">Group Name</label>
             <input
-              className="w-full input-focus text-white placeholder-white/40"
+              className="w-full input-focus text-primary placeholder-secondary/40"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               placeholder="3-50 chars, alphanumeric"
@@ -125,13 +125,13 @@ export default function Groups() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Avatar (optional)</label>
-            <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] || null)} className="text-white/80" />
+            <label className="block text-sm font-medium mb-1 text-primary">Avatar (optional)</label>
+            <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] || null)} className="text-secondary" />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Add Members</label>
+            <label className="block text-sm font-medium mb-1 text-primary">Add Members</label>
             <input
-              className="w-full input-focus mb-2 text-white placeholder-white/40"
+              className="w-full input-focus mb-2 text-primary placeholder-secondary/40"
               placeholder="Search users..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -148,16 +148,16 @@ export default function Groups() {
                 ) : (
                   <div className="w-8 h-8 rounded-full bg-white/20" />
                 )}
-                <div className="text-white">{user.displayName || user.username}</div>
+                <div className="text-primary">{user.displayName || user.username}</div>
               </button>
             ))}
             {form.memberIds.length > 0 && (
-              <div className="mt-2 text-sm text-white/70">{form.memberIds.length} member(s) selected</div>
+              <div className="mt-2 text-sm text-secondary">{form.memberIds.length} member(s) selected</div>
             )}
           </div>
           {error && <Alert>{error}</Alert>}
           <div className="flex gap-2 justify-end">
-            <button type="button" className="px-4 py-2 rounded-full border border-white/20 text-white/80 hover:bg-white/10 transition" onClick={() => setShowCreate(false)}>Cancel</button>
+            <button type="button" className="px-4 py-2 rounded-full border border-white/20 text-secondary hover:bg-white/10 transition" onClick={() => setShowCreate(false)}>Cancel</button>
             <button type="submit" className="neon-btn">Create</button>
           </div>
         </form>
@@ -165,4 +165,3 @@ export default function Groups() {
     </div>
   );
 }
-

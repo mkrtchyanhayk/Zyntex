@@ -256,7 +256,7 @@ export default function Feed({ token }) {
         {posts.map((post, index) => {
           const hideCounts = Boolean(post.hideLikeCount && me?._id !== post.author?._id);
           const { summary, total } = getReactionSummary(post);
-          const leadingReactions = summary.slice(0, 3);
+          const leadingReactions = summary.slice(0, 2);
           const userReaction = getUserReactionEmoji(post, me?._id);
           const canViewReactions = !hideCounts;
           const showHiddenMessage = hideCounts && total > 0;
@@ -269,19 +269,19 @@ export default function Feed({ token }) {
               style={{ '--delay': `${index * 0.06}s` }}
             >
               <div className="gradient-inner rounded-[1.45rem] overflow-hidden">
-                <div className="px-5 py-4 text-sm text-white flex items-center gap-3">
+                <div className="px-5 py-4 text-sm text-primary flex items-center gap-3">
                   <Link to={post.author?.username ? `/u/${post.author.username}` : '#'} className="flex items-center gap-3 hover:opacity-80 transition">
                     {post.author?.avatarUrl ? (
                       <img src={getImageUrl(post.author.avatarUrl)} alt="avatar" className="w-10 h-10 rounded-full object-cover border border-white/20" />
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white/70">{post.author?.username?.[0]?.toUpperCase() || '?'}</div>
+                      <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-primary/70">{post.author?.username?.[0]?.toUpperCase() || '?'}</div>
                     )}
                     <div>
-                      <div className="font-semibold">{post.author?.displayName || post.author?.username || 'unknown'}</div>
-                      <div className="text-white/60 text-xs">@{post.author?.username || 'unknown'}</div>
+                      <div className="font-semibold text-primary">{post.author?.displayName || post.author?.username || 'unknown'}</div>
+                      <div className="text-secondary text-xs">@{post.author?.username || 'unknown'}</div>
                     </div>
                   </Link>
-                  <span className="ml-auto text-xs text-white/60">{new Date(post.createdAt).toLocaleString()}</span>
+                  <span className="ml-auto text-xs text-secondary">{new Date(post.createdAt).toLocaleString()}</span>
                 </div>
                 {post.imageUrl && (
                   <div className="relative">
@@ -291,11 +291,11 @@ export default function Feed({ token }) {
                 )}
                 {post.caption && (
                   <div className="px-5 pt-4">
-                    <p className="text-[11px] uppercase tracking-[0.4em] text-white/50">Title</p>
-                    <p className="text-white text-xl font-semibold mt-1">{post.caption}</p>
+                    <p className="text-[11px] uppercase tracking-[0.4em] text-secondary/50">Title</p>
+                    <p className="text-primary text-xl font-semibold mt-1">{post.caption}</p>
                   </div>
                 )}
-                {post.textContent && <div className="px-5 py-4 whitespace-pre-wrap text-white text-base">{post.textContent}</div>}
+                {post.textContent && <div className="px-5 py-4 whitespace-pre-wrap text-primary text-base">{post.textContent}</div>}
                 <div className="px-5 pb-5 space-y-3">
                   <div className="flex flex-wrap items-center justify-between gap-4">
                     <div
@@ -332,9 +332,9 @@ export default function Feed({ token }) {
                         )}
                       </div>
                       {total > 0 && (
-                        <div className="flex items-center gap-3 text-xs text-white/70">
+                        <div className="flex items-center gap-3 text-xs text-secondary">
                           {showHiddenMessage ? (
-                            <span className="text-white/50 text-[11px] uppercase tracking-[0.2em]">Reactions hidden by author</span>
+                            <span className="text-secondary/50 text-[11px] uppercase tracking-[0.2em]">Reactions hidden by author</span>
                           ) : (
                             <>
                               <div className="flex items-center gap-2">
@@ -342,17 +342,17 @@ export default function Feed({ token }) {
                                   {leadingReactions.map((item, idx) => (
                                     <span
                                       key={item.emoji}
-                                      className={`w-7 h-7 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-base ${idx > 0 ? '-ml-2' : ''}`}
+                                      className={`w-6 h-6 rounded-full bg-surface border border-white/10 flex items-center justify-center text-sm shadow-sm ${idx > 0 ? '-ml-2' : ''} z-${10 - idx}`}
                                     >
                                       {item.emoji}
                                     </span>
                                   ))}
                                 </div>
-                                <span className="text-sm text-white">{total}</span>
+                                <span className="text-sm text-secondary font-medium">{total}</span>
                               </div>
                               {canViewReactions && (
                                 <button
-                                  className="underline decoration-dotted hover:text-white"
+                                  className="underline decoration-dotted hover:text-primary"
                                   onClick={() => openReactionViewer(post._id)}
                                   disabled={!token}
                                 >
@@ -364,15 +364,15 @@ export default function Feed({ token }) {
                         </div>
                       )}
                     </div>
-                    <span className="text-xs text-white/60">{post.textContent ? 'Text + Media' : 'Photo drop'}</span>
+                    <span className="text-xs text-secondary">{post.textContent ? 'Text + Media' : 'Photo drop'}</span>
                   </div>
-                  <div className="flex flex-wrap items-center gap-4 text-sm text-white/70">
-                    <button className="hover:text-white transition" onClick={() => toggleComments(post._id)}>
+                  <div className="flex flex-wrap items-center gap-4 text-sm text-secondary">
+                    <button className="hover:text-primary transition" onClick={() => toggleComments(post._id)}>
                       {commentsOpen[post._id] ? 'Hide comments' : 'View comments'}
                     </button>
                     {me?._id === post.author?._id && (
                       <button
-                        className="text-xs text-white/50 hover:text-white transition"
+                        className="text-xs text-secondary/50 hover:text-primary transition"
                         onClick={() => toggleHideLikes(post._id, !post.hideLikeCount)}
                       >
                         {post.hideLikeCount ? 'Show reaction counts' : 'Hide reaction counts'}
@@ -382,11 +382,11 @@ export default function Feed({ token }) {
                   {commentsOpen[post._id] && (
                     <div className="space-y-3 border-t border-white/10 pt-3">
                       {commentsLoading[post._id] ? (
-                        <p className="text-white/60 text-sm">Loading comments...</p>
+                        <p className="text-secondary text-sm">Loading comments...</p>
                       ) : (
                         <>
                           {(comments[post._id] || []).length === 0 && (
-                            <p className="text-white/60 text-sm">Be the first to comment.</p>
+                            <p className="text-secondary text-sm">Be the first to comment.</p>
                           )}
                           {(comments[post._id] || []).map((comment) => (
                             <div key={comment._id} className="flex items-start gap-3">
@@ -396,13 +396,13 @@ export default function Feed({ token }) {
                                 <div className="w-8 h-8 rounded-full bg-white/10" />
                               )}
                               <div className="bg-white/5 rounded-2xl px-3 py-2 flex-1">
-                                <div className="text-xs text-white/60">@{comment.author?.username}</div>
-                                <div className="text-white text-sm">{comment.text}</div>
+                                <div className="text-xs text-secondary">@{comment.author?.username}</div>
+                                <div className="text-primary text-sm">{comment.text}</div>
                               </div>
                               {comment.author?._id === me?._id && (
                                 <button
                                   onClick={() => deleteComment(post._id, comment._id)}
-                                  className="text-xs text-white/50 hover:text-white"
+                                  className="text-xs text-secondary/50 hover:text-primary"
                                 >
                                   Remove
                                 </button>
@@ -420,7 +420,7 @@ export default function Feed({ token }) {
                           }}
                         >
                           <input
-                            className="flex-1 input-focus text-white placeholder-white/40"
+                            className="flex-1 input-focus text-primary placeholder-secondary/40"
                             placeholder="Leave a comment..."
                             value={commentInputs[post._id] || ''}
                             onChange={(e) =>
@@ -440,14 +440,14 @@ export default function Feed({ token }) {
           );
         })}
         {posts.length === 0 && !loading && (
-          <div className="glass-panel p-6 text-center text-white/70">No posts yet. Be the first!</div>
+          <div className="glass-panel p-6 text-center text-secondary">No posts yet. Be the first!</div>
         )}
       </section>
 
       <FabButton onClick={() => setComposeOpen(true)} disabled={!token} />
 
       <Modal open={composeOpen} onClose={() => setComposeOpen(false)} title="Compose post">
-        {!token && <p className="text-sm text-white/70 mb-2">Login to create and like posts.</p>}
+        {!token && <p className="text-sm text-secondary mb-2">Login to create and like posts.</p>}
         <form
           className="space-y-6"
           onSubmit={(e) => {
@@ -456,19 +456,19 @@ export default function Feed({ token }) {
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div className="space-y-3">
-              <label className="text-sm font-medium text-white/80">Upload image</label>
-              <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] || null)} disabled={!token} className="text-white/70" />
-              <div className="text-xs text-white/60">Or use an image URL</div>
+              <label className="text-sm font-medium text-primary">Upload image</label>
+              <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] || null)} disabled={!token} className="text-secondary" />
+              <div className="text-xs text-secondary">Or use an image URL</div>
               <input className="input-focus w-full" placeholder="https://..." name="imageUrl" value={form.imageUrl} onChange={onChange} disabled={!token} />
             </div>
             <div className="space-y-3">
-              <label className="text-sm font-medium text-white/80">Text post</label>
+              <label className="text-sm font-medium text-primary">Text post</label>
               <textarea className="input-focus w-full min-h-[120px]" placeholder="Share your thoughts..." name="textContent" value={form.textContent} onChange={onChange} disabled={!token} />
-              <label className="text-sm font-medium text-white/80">Caption</label>
+              <label className="text-sm font-medium text-primary">Caption</label>
               <input className="input-focus w-full" placeholder="Optional caption" name="caption" value={form.caption} onChange={onChange} disabled={!token} />
             </div>
           </div>
-          <label className="flex items-center gap-3 text-sm text-white/80">
+          <label className="flex items-center gap-3 text-sm text-primary">
             <input
               type="checkbox"
               className="h-4 w-4 rounded border-white/40 bg-transparent"
@@ -480,7 +480,7 @@ export default function Feed({ token }) {
           </label>
           {error && <Alert>{error}</Alert>}
           <div className="flex items-center justify-end gap-3">
-            <button type="button" className="px-4 py-2 rounded-full border border-white/20 text-white/80 hover:bg-white/10 transition" onClick={() => setComposeOpen(false)}>Cancel</button>
+            <button type="button" className="px-4 py-2 rounded-full border border-white/20 text-secondary hover:bg-white/10 transition" onClick={() => setComposeOpen(false)}>Cancel</button>
             <button className="neon-btn disabled:opacity-50 disabled:cursor-not-allowed" disabled={!token}>Publish</button>
           </div>
         </form>
@@ -492,14 +492,14 @@ export default function Feed({ token }) {
         title="Post reactions"
       >
         {reactionViewer.data.length === 0 ? (
-          <p className="text-sm text-white/70">No reactions yet.</p>
+          <p className="text-sm text-secondary">No reactions yet.</p>
         ) : (
           <div className="space-y-3">
             {reactionViewer.data.map((entry) => (
               <div key={entry.emoji} className="flex flex-col gap-2 border border-white/10 rounded-xl p-3">
-                <div className="flex items-center gap-2 text-white">
+                <div className="flex items-center gap-2 text-primary">
                   <span className="text-xl">{entry.emoji}</span>
-                  <span className="text-sm text-white/70">{entry.count} reaction(s)</span>
+                  <span className="text-sm text-secondary">{entry.count} reaction(s)</span>
                 </div>
                 <div className="flex flex-wrap gap-3">
                   {entry.users.map((user) => (
@@ -509,7 +509,7 @@ export default function Feed({ token }) {
                       ) : (
                         <div className="w-6 h-6 rounded-full bg-white/10" />
                       )}
-                      <span className="text-sm text-white">{user.displayName || user.username}</span>
+                      <span className="text-sm text-primary">{user.displayName || user.username}</span>
                     </div>
                   ))}
                 </div>
@@ -521,7 +521,7 @@ export default function Feed({ token }) {
 
       <Modal open={showAuthModal} onClose={() => setShowAuthModal(false)} title="Authentication Required">
         <div className="space-y-4">
-          <p className="text-white/80">
+          <p className="text-primary/80">
             To like, comment, or subscribe to posts, please create an account or login.
           </p>
           <div className="flex gap-3">
@@ -529,7 +529,7 @@ export default function Feed({ token }) {
               Create Account
             </Link>
             <button
-              className="px-4 py-2 rounded-full border border-white/20 text-white/80 hover:bg-white/10 transition"
+              className="px-4 py-2 rounded-full border border-white/20 text-secondary hover:bg-white/10 transition"
               onClick={() => setShowAuthModal(false)}
             >
               Cancel
@@ -540,4 +540,3 @@ export default function Feed({ token }) {
     </div>
   );
 }
-

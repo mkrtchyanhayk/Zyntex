@@ -34,7 +34,18 @@ const parseMessagePayload = (text = '') => {
   return { type, url: text.replace(marker, '') };
 };
 
-const extractGifUrl = (gif) => gif?.media_formats?.tinygif?.url || gif?.media_formats?.gif?.url || gif?.url || '';
+const extractGifUrl = (gif) => {
+  if (!gif) return '';
+  // Try Tenor V2 formats
+  if (gif.media_formats) {
+    return gif.media_formats.gif?.url ||
+      gif.media_formats.mediumgif?.url ||
+      gif.media_formats.tinygif?.url ||
+      '';
+  }
+  // Fallback for other formats
+  return gif.url || '';
+};
 
 const TENOR_KEY = process.env.REACT_APP_TENOR_KEY || 'LIVDSRZULELA';
 const TENOR_CLIENT = 'zyntex-web';
@@ -117,21 +128,14 @@ export default function Messages() {
       return;
     }
     fetchMessages(id);
-    setIsAtBottom(true);
-    setShowScrollHint(false);
+    // Only scroll to bottom on initial load
     setTimeout(() => scrollToBottom('auto'), 100);
+
     messagePollRef.current = setInterval(async () => {
-      const container = messageListRef.current;
-      if (container) {
-        const wasAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 120;
-        await fetchMessages(id);
-        if (wasAtBottom && container) {
-          setTimeout(() => scrollToBottom('auto'), 50);
-        }
-      } else {
-        await fetchMessages(id);
-      }
-    }, 1500);
+      await fetchMessages(id);
+      // Removed auto-scroll on poll to allow freeform scrolling
+    }, 3000); // Increased poll interval slightly
+
     return () => {
       if (messagePollRef.current) {
         clearInterval(messagePollRef.current);
@@ -157,24 +161,8 @@ export default function Messages() {
     return () => container.removeEventListener('scroll', listener);
   }, [handleMessagesScroll, id]);
 
-  useEffect(() => {
-    if (messages.length && messageListRef.current) {
-      const container = messageListRef.current;
-      const wasAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 120;
-      const isNewMessage = messages.length > lastMessageCountRef.current;
-      lastMessageCountRef.current = messages.length;
-      if (wasAtBottom && isNewMessage) {
-        requestAnimationFrame(() => {
-          if (container) {
-            const stillAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 120;
-            if (stillAtBottom) {
-              scrollToBottom('auto');
-            }
-          }
-        });
-      }
-    }
-  }, [messages, scrollToBottom]);
+  // Removed the useEffect that auto-scrolls on new messages to respect user's scroll position
+  // Users can use the scroll hint button if they want to jump to bottom
 
   useEffect(() => {
     if (!searchQuery || searchQuery.length < 2) {
@@ -364,8 +352,8 @@ export default function Messages() {
       <aside className="glass-panel p-5 card-rise convo-panel">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <p className="text-sm uppercase tracking-[0.2em] text-white/60">Inbox</p>
-            <h2 className="text-xl font-semibold text-white">Direct Messages</h2>
+            <p className="text-sm uppercase tracking-[0.2em] text-secondary/60">Inbox</p>
+            <h2 className="text-xl font-semibold text-primary">Direct Messages</h2>
           </div>
           <button
             onClick={() => setShowUserSelect(true)}
@@ -379,7 +367,7 @@ export default function Messages() {
             value={panelSearch}
             onChange={(e) => setPanelSearch(e.target.value)}
             placeholder="Search conversations"
-            className="w-full convo-search input-focus text-sm placeholder-white/50"
+            className="w-full convo-search input-focus text-sm placeholder-secondary/50 text-primary"
           />
           <span className="search-icon" aria-hidden="true">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -414,12 +402,12 @@ export default function Messages() {
                 )}
                 <div className="flex-1 text-left">
                   <div className="flex items-center justify-between gap-2">
-                    <div className="text-white font-medium truncate">
+                    <div className="text-primary font-medium truncate">
                       {isGroup ? c.group?.name : (other?.displayName || other?.username || 'Chat')}
                     </div>
                     <span className="conversation-time">{formatRelativeTime(updatedAt)}</span>
                   </div>
-                  <p className="conversation-snippet">
+                  <p className="conversation-snippet text-secondary">
                     {lastMessage ? lastMessage : isGroup ? 'Group created' : 'Tap to open chat'}
                   </p>
                   {c.unreadCount > 0 && (
@@ -429,7 +417,7 @@ export default function Messages() {
               </button>
             );
           })}
-          {convos.length === 0 && <div className="text-white/70 text-sm">No conversations</div>}
+          {convos.length === 0 && <div className="text-secondary text-sm">No conversations</div>}
         </div>
       </aside>
       <main className="md:col-span-2 glass-panel flex flex-col card-rise delay-2 chat-window">
@@ -437,14 +425,14 @@ export default function Messages() {
           <>
             <div className="chat-header">
               <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-white/60">Chatting with</p>
-                <h3 className="text-xl font-semibold text-white">
+                <p className="text-xs uppercase tracking-[0.3em] text-secondary/60">Chatting with</p>
+                <h3 className="text-xl font-semibold text-primary">
                   {activeConvo?.group?.name ||
                     getOtherUser(activeConvo || {})?.displayName ||
                     getOtherUser(activeConvo || {})?.username ||
                     'Conversation'}
                 </h3>
-                <p className="text-sm text-white/60">
+                <p className="text-sm text-secondary/60">
                   {activeConvo?.group ? `${activeConvo?.group?.members?.length || 0} members` : 'Direct message'}
                 </p>
               </div>
@@ -512,7 +500,7 @@ export default function Messages() {
                 );
               })}
               {sortedMessages.length === 0 && (
-                <div className="text-white/70 text-sm text-center py-10">No messages yet</div>
+                <div className="text-secondary text-sm text-center py-10">No messages yet</div>
               )}
               <div ref={messagesEndRef} />
               {showScrollHint && (
@@ -559,7 +547,7 @@ export default function Messages() {
                   </button>
                 </div>
                 <textarea
-                  className="flex-1 input-focus text-white placeholder-white/60 resize-none"
+                  className="flex-1 input-focus text-primary placeholder-secondary/60 resize-none"
                   rows={1}
                   value={text}
                   onChange={(e) => setText(e.target.value)}
@@ -610,7 +598,7 @@ export default function Messages() {
                           onChange={(e) => setGifQuery(e.target.value)}
                           onKeyDown={handleGifInputKeyDown}
                           placeholder="Search Tenor..."
-                          className="input-focus text-sm placeholder-white/60"
+                          className="input-focus text-sm placeholder-secondary/60 text-primary"
                         />
                         <button type="button" className="composer-btn" onClick={handleGifSearch}>
                           Search
@@ -618,7 +606,7 @@ export default function Messages() {
                       </div>
                       {!gifQuery && (
                         <div className="gif-suggestions">
-                          <p className="text-xs text-white/60 mb-2">Suggestions:</p>
+                          <p className="text-xs text-secondary/60 mb-2">Suggestions:</p>
                           <div className="flex flex-wrap gap-2">
                             {GIF_SUGGESTIONS.map((suggestion) => (
                               <button
@@ -639,9 +627,9 @@ export default function Messages() {
                       {gifError && <p className="picker-error">{gifError}</p>}
                       <div className="gif-grid">
                         {gifLoading ? (
-                          <p className="text-white/70 text-sm">Loading GIFs…</p>
+                          <p className="text-secondary text-sm">Loading GIFs…</p>
                         ) : gifResults.length === 0 ? (
-                          <p className="text-white/70 text-sm">No GIFs found. Try a different search.</p>
+                          <p className="text-secondary text-sm">No GIFs found. Try a different search.</p>
                         ) : (
                           gifResults.map((gif) => {
                             const url = extractGifUrl(gif);
@@ -668,8 +656,8 @@ export default function Messages() {
         ) : (
           <div className="flex-1 flex items-center justify-center">
             <div className="empty-chat-state text-center">
-              <h3 className="text-2xl font-semibold mb-2 text-white">Pick a chat</h3>
-              <p className="text-white/70 mb-6">Conversations and DMs will appear here.</p>
+              <h3 className="text-2xl font-semibold mb-2 text-primary">Pick a chat</h3>
+              <p className="text-secondary mb-6">Conversations and DMs will appear here.</p>
               <button className="neon-btn text-sm" onClick={() => setShowUserSelect(true)}>
                 Start a conversation
               </button>
@@ -681,7 +669,7 @@ export default function Messages() {
       <Modal open={showUserSelect} onClose={() => { setShowUserSelect(false); setSearchQuery(''); }} title="Select User to Message">
         <div>
           <input
-            className="w-full input-focus mb-4 text-white placeholder-white/40"
+            className="w-full input-focus mb-4 text-primary placeholder-secondary/40"
             placeholder="Search users..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -699,12 +687,12 @@ export default function Messages() {
                   <div className="w-10 h-10 rounded-full bg-white/20" />
                 )}
                 <div>
-                  <div className="font-medium text-white">{user.displayName || user.username}</div>
-                  <div className="text-sm text-white/60">@{user.username}</div>
+                  <div className="font-medium text-primary">{user.displayName || user.username}</div>
+                  <div className="text-sm text-secondary">@{user.username}</div>
                 </div>
               </button>
             ))}
-            {searchQuery.length >= 2 && searchResults.length === 0 && <p className="text-white/60">No users found</p>}
+            {searchQuery.length >= 2 && searchResults.length === 0 && <p className="text-secondary">No users found</p>}
           </div>
         </div>
       </Modal>

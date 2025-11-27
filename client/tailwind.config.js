@@ -5,7 +5,16 @@ module.exports = {
     "./src/**/*.{js,jsx}"
   ],
   theme: {
-    extend: {}
+    extend: {
+      colors: {
+        deep: 'var(--bg-deep)',
+        surface: 'var(--surface)',
+        'surface-muted': 'var(--surface-muted)',
+        primary: 'var(--text-primary)',
+        secondary: 'var(--text-secondary)',
+        aurora: 'var(--accent-primary)',
+      }
+    }
   },
   plugins: []
 };

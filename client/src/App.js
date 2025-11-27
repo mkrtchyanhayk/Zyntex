@@ -59,11 +59,38 @@ export default function App() {
   const mailboxBadge = inviteCounts.mailboxTotal ?? ((inviteCounts.total || 0) + (inviteCounts.notifications || 0));
 
   const navLinks = useMemo(() => ([
-    { to: '/', label: 'Feed' },
-    { to: '/search', label: 'Search', auth: true },
-    { to: '/groups', label: 'Groups', auth: true, badge: inviteCounts.group },
-    { to: '/messages', label: 'DMs', auth: true, badge: inviteCounts.dm },
-    { to: '/mailbox', label: 'Mailbox', auth: true, badge: mailboxBadge }
+    {
+      to: '/',
+      label: 'Feed',
+      icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+    },
+    {
+      to: '/search',
+      label: 'Search',
+      auth: true,
+      icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+    },
+    {
+      to: '/groups',
+      label: 'Groups',
+      auth: true,
+      badge: inviteCounts.group,
+      icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+    },
+    {
+      to: '/messages',
+      label: 'DMs',
+      auth: true,
+      badge: inviteCounts.dm,
+      icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+    },
+    {
+      to: '/mailbox',
+      label: 'Mailbox',
+      auth: true,
+      badge: mailboxBadge,
+      icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+    }
   ]), [inviteCounts, mailboxBadge]);
 
   const isActive = (path) => {
@@ -90,9 +117,13 @@ export default function App() {
               <Link
                 key={link.to}
                 to={link.to}
-                className={`nav-link ${isActive(link.to) ? 'active' : ''}`}
+                className={`nav-link group relative flex items-center justify-center p-3 rounded-full transition-all ${isActive(link.to) ? 'active text-primary' : 'text-secondary hover:text-primary hover:bg-white/10'}`}
+                title={link.label}
               >
-                <span>{link.label}</span>
+                {link.icon}
+                <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+                  {link.label}
+                </span>
                 {link.badge > 0 && (
                   <span className="absolute -top-1 -right-1 min-w-[1.2rem] h-5 px-1 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 text-[10px] font-semibold flex items-center justify-center text-white shadow-lg">
                     {link.badge}
@@ -103,23 +134,13 @@ export default function App() {
           </nav>
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setShowChangelog(true)}
-              className="p-2 rounded-full border border-white/20 hover:bg-white/10 transition-all"
-              aria-label="What's new"
-              title="What's new"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white/80">
-                <path d="M12 2v20M2 12h20" />
-              </svg>
-            </button>
-            <button
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="p-2 rounded-full border border-white/20 hover:bg-white/10 transition-all"
+              className="p-2 rounded-full border border-white/20 hover:bg-white/10 transition-all text-secondary hover:text-primary"
               aria-label="Toggle theme"
               title="Toggle theme"
             >
               {theme === 'dark' ? (
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white/80">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="12" r="5" />
                   <line x1="12" y1="1" x2="12" y2="3" />
                   <line x1="12" y1="21" x2="12" y2="23" />
@@ -131,7 +152,7 @@ export default function App() {
                   <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
                 </svg>
               ) : (
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white/80">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
                 </svg>
               )}
@@ -145,11 +166,11 @@ export default function App() {
                     {me?.avatarUrl ? (
                       <img src={getImageUrl(me.avatarUrl)} alt="avatar" className="w-9 h-9 rounded-full object-cover border border-white/30 shadow-lg" />
                     ) : (
-                      <span className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-white text-sm">{me?.username?.[0]?.toUpperCase() || 'U'}</span>
+                      <span className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-primary text-sm">{me?.username?.[0]?.toUpperCase() || 'U'}</span>
                     )}
                     <div className="text-left leading-tight">
-                      <span className="text-sm font-semibold text-white">{me?.displayName || me?.username || 'Profile'}</span>
-                      <span className="block text-[11px] text-white/70">@{me?.username || 'you'}</span>
+                      <span className="text-sm font-semibold text-primary">{me?.displayName || me?.username || 'Profile'}</span>
+                      <span className="block text-[11px] text-secondary">@{me?.username || 'you'}</span>
                     </div>
                   </>
                 )}
@@ -158,7 +179,7 @@ export default function App() {
             {!token ? (
               <Link className="neon-btn text-sm" to="/register">Join Zyntex</Link>
             ) : (
-              <button className="text-sm text-white/80 hover:text-white px-4 py-2 rounded-full border border-white/20 hover:border-white/50 transition-all" onClick={handleLogout}>
+              <button className="text-sm text-secondary hover:text-primary px-4 py-2 rounded-full border border-white/20 hover:border-white/50 transition-all" onClick={handleLogout}>
                 Logout
               </button>
             )}
@@ -168,10 +189,10 @@ export default function App() {
               <Link
                 key={`${link.to}-mobile`}
                 to={link.to}
-                className={`flex-1 text-center text-xs py-2 rounded-full border transition ${isActive(link.to) ? 'border-white/40 text-white bg-white/10' : 'border-white/10 text-white/70'
+                className={`flex-1 flex justify-center items-center py-2 rounded-full border transition ${isActive(link.to) ? 'border-white/40 text-primary bg-white/10' : 'border-white/10 text-secondary'
                   }`}
               >
-                {link.label}
+                {link.icon}
               </Link>
             ))}
           </div>
@@ -195,4 +216,3 @@ export default function App() {
     </div>
   );
 }
-

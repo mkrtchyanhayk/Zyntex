@@ -33,9 +33,9 @@ export default function Register({ onAuth }) {
       <div className="hidden lg:flex flex-col gap-6 card-rise">
         <div className="gradient-border hover-lift">
           <div className="gradient-inner rounded-[1.45rem] p-8 space-y-4">
-            <p className="uppercase text-xs tracking-[0.45em] text-white/60">The new social canvas</p>
-            <h1 className="text-4xl font-black leading-tight">Welcome to <span className="text-aurora">Zyntex</span></h1>
-            <p className="text-white/70 text-lg">Blend images, words, groups, and reactions in a single immersive feed.</p>
+            <p className="uppercase text-xs tracking-[0.45em] text-secondary/60">The new social canvas</p>
+            <h1 className="text-4xl font-black leading-tight text-primary">Welcome to <span className="text-aurora">Zyntex</span></h1>
+            <p className="text-secondary text-lg">Blend images, words, groups, and reactions in a single immersive feed.</p>
             <div className="grid grid-cols-2 gap-4">
               {[
                 { label: 'DM invites', value: 'Mailbox sync' },
@@ -44,29 +44,29 @@ export default function Register({ onAuth }) {
                 { label: 'Recovery', value: 'Secure codes' }
               ].map((item) => (
                 <div key={item.label} className="glass-panel px-4 py-3 border-white/5">
-                  <p className="text-xs uppercase tracking-[0.3em] text-white/60">{item.label}</p>
-                  <p className="text-sm text-white mt-1">{item.value}</p>
+                  <p className="text-xs uppercase tracking-[0.3em] text-secondary/60">{item.label}</p>
+                  <p className="text-sm text-primary mt-1">{item.value}</p>
                 </div>
               ))}
             </div>
           </div>
         </div>
         <div className="glass-panel p-6 space-y-3">
-          <p className="text-sm text-white/70">Dual mode experience</p>
-          <p className="text-white text-lg">Register with just a username, or login instantly via username/email. Password strength guidance built-in.</p>
+          <p className="text-sm text-secondary">Dual mode experience</p>
+          <p className="text-primary text-lg">Register with just a username, or login instantly via username/email. Password strength guidance built-in.</p>
         </div>
       </div>
 
       <div className="glass-panel p-6 hover-lift card-rise delay-2">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-white capitalize">{mode}</h2>
+          <h2 className="text-xl font-semibold text-primary capitalize">{mode}</h2>
           <button
-            className="text-sm text-white/70 hover:text-white transition"
+            className="text-sm text-secondary hover:text-primary transition"
             onClick={() => setMode(mode === 'register' ? 'login' : 'register')}
           >
             {mode === 'register' ? (
               <>
-                Have an account? <span className="font-semibold text-white">Log in</span>
+                Have an account? <span className="font-semibold text-primary">Log in</span>
               </>
             ) : (
               'Need an account?'
@@ -77,9 +77,9 @@ export default function Register({ onAuth }) {
         <form className="space-y-4" onSubmit={submit}>
           {mode === 'register' && (
             <div>
-              <label className="block text-sm font-medium mb-1 text-white/80">Username</label>
+              <label className="block text-sm font-medium mb-1 text-primary">Username</label>
               <input
-                className="input-focus w-full text-white placeholder-white/40"
+                className="input-focus w-full text-primary placeholder-secondary/40"
                 name="username"
                 value={form.username}
                 onChange={onChange}
@@ -96,10 +96,10 @@ export default function Register({ onAuth }) {
           )}
           {mode === 'register' ? (
             <div>
-              <label className="block text-sm font-medium mb-1 text-white/80">Email (optional)</label>
+              <label className="block text-sm font-medium mb-1 text-primary">Email (optional)</label>
               <input
                 type="email"
-                className="input-focus w-full text-white placeholder-white/40"
+                className="input-focus w-full text-primary placeholder-secondary/40"
                 name="email"
                 value={form.email}
                 onChange={onChange}
@@ -108,9 +108,9 @@ export default function Register({ onAuth }) {
             </div>
           ) : (
             <div>
-              <label className="block text-sm font-medium mb-1 text-white/80">Email or Username</label>
+              <label className="block text-sm font-medium mb-1 text-primary">Email or Username</label>
               <input
-                className="input-focus w-full text-white placeholder-white/40"
+                className="input-focus w-full text-primary placeholder-secondary/40"
                 name="identifier"
                 value={form.identifier}
                 onChange={onChange}
@@ -119,11 +119,11 @@ export default function Register({ onAuth }) {
             </div>
           )}
           <div>
-            <label className="block text-sm font-medium mb-1 text-white/80">Password</label>
+            <label className="block text-sm font-medium mb-1 text-primary">Password</label>
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
-                className="input-focus w-full text-white placeholder-white/40 pr-10"
+                className="input-focus w-full text-primary placeholder-secondary/40 pr-10"
                 name="password"
                 value={form.password}
                 onChange={onChange}
@@ -134,7 +134,7 @@ export default function Register({ onAuth }) {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/70 hover:text-white transition"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-secondary hover:text-primary transition"
                 >
                   {showPassword ? '👁️' : '👁️‍🗨️'}
                 </button>
@@ -153,11 +153,10 @@ export default function Register({ onAuth }) {
 
         {mode === 'login' && (
           <div className="mt-4 text-center">
-            <a href="/forgot" className="text-sm text-white/70 hover:text-white transition">Forgot password?</a>
+            <a href="/forgot" className="text-sm text-secondary hover:text-primary transition">Forgot password?</a>
           </div>
         )}
       </div>
     </div>
   );
 }
-
