@@ -12,6 +12,14 @@ import dmRoutes from './routes/dm.routes.js';
 import groupRoutes from './routes/group.routes.js';
 import inviteRoutes from './routes/invite.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
+import storyRoutes from './routes/story.routes.js';
+import savedPostsRoutes from './routes/savedPosts.routes.js';
+import exploreRoutes from './routes/explore.routes.js';
+import reelRoutes from './routes/reel.routes.js';
+import collectionRoutes from './routes/collection.routes.js';
+import highlightRoutes from './routes/highlight.routes.js';
+import audioRoutes from './routes/audio.routes.js';
+import filterRoutes from './routes/filter.routes.js';
 
 dotenv.config();
 
@@ -38,6 +46,14 @@ app.use('/api/dm', dmRoutes);
 app.use('/api/groups', groupRoutes);
 app.use('/api/invitations', inviteRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/stories', storyRoutes);
+app.use('/api/saved', savedPostsRoutes);
+app.use('/api/explore', exploreRoutes);
+app.use('/api/reels', reelRoutes);
+app.use('/api/collections', collectionRoutes);
+app.use('/api/highlights', highlightRoutes);
+app.use('/api/audio', audioRoutes);
+app.use('/api/filters', filterRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ message: 'Not found' });

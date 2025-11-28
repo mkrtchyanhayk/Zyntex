@@ -13,7 +13,8 @@ const userSchema = new mongoose.Schema(
     resetCode: { type: String, default: null },
     resetCodeExpires: { type: Date, default: null },
     followers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-    following: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
+    following: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    isPrivate: { type: Boolean, default: false }
   },
   { timestamps: true }
 );

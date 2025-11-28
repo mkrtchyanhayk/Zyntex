@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
+// import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import api from '../api';
 import { getImageUrl } from '../utils/imageUrl';
-import Modal from '../components/Modal';
+import PostCard from '../components/PostCard';
 
 export default function Profile({ token }) {
   const [me, setMe] = useState(null);
@@ -9,6 +10,7 @@ export default function Profile({ token }) {
   const [posts, setPosts] = useState([]);
   const [likedPosts, setLikedPosts] = useState([]);
   const [myComments, setMyComments] = useState([]);
+  const [stats, setStats] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
   const [form, setForm] = useState({ displayName: '', bio: '', isPrivate: false });
   const [file, setFile] = useState(null);
@@ -41,15 +43,20 @@ export default function Profile({ token }) {
   };
 
   const fetchLikedPosts = async () => {
-    // Placeholder: In a real app, you'd have an endpoint for this.
-    // For now, we'll just simulate it or leave it empty if no endpoint exists.
-    // Assuming we might add this endpoint later.
     setLikedPosts([]);
   };
 
   const fetchMyComments = async () => {
-    // Placeholder for fetching user's comments
     setMyComments([]);
+  };
+
+  const fetchStats = async () => {
+    try {
+      const { data } = await api.get('/api/users/me/stats');
+      setStats(data);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   useEffect(() => {
@@ -61,6 +68,7 @@ export default function Profile({ token }) {
   useEffect(() => {
     if (activeTab === 'liked') fetchLikedPosts();
     if (activeTab === 'comments') fetchMyComments();
+    if (activeTab === 'dashboard') fetchStats();
   }, [activeTab]);
 
   const save = async (e) => {
@@ -92,20 +100,44 @@ export default function Profile({ token }) {
     }
   };
 
-  const handleDeletePost = async (postId) => {
-    if (!window.confirm('Are you sure you want to delete this post?')) return;
-    try {
-      await api.delete(`/api/posts/${postId}`);
-      setPosts(posts.filter(p => p._id !== postId));
-    } catch (e) {
-      alert('Failed to delete post');
-    }
+  const updatePostState = (updated) => {
+    setPosts((prev) =>
+      prev.map((p) => (p._id === updated._id ? { ...p, ...updated, author: updated.author || p.author } : p))
+    );
   };
 
   if (!token) return <p className="text-secondary">Please log in to manage your profile.</p>;
   if (!me) return <div className="flex justify-center p-8"><div className="w-8 h-8 border-2 border-aurora border-t-transparent rounded-full animate-spin" /></div>;
 
   const memberYear = me?.createdAt ? new Date(me.createdAt).getFullYear() : '—';
+
+  // Calculate stats
+  const totalReach = posts.reduce((acc, post) => acc + (post.seenBy?.length || 0), 0);
+  const totalEngagement = posts.reduce((acc, post) => {
+    const likes = post.likes?.length || 0;
+    // Reactions are stored in a Map or Object, need to count them if 'likes' field isn't used for reactions
+    // But Post model has 'reactions' map. 'likes' might be legacy or specific.
+    // Let's check Post model again. It has 'reactions' map.
+    // The 'likes' field might not be there or might be different.
+    // Wait, Post model has `reactions` map. It doesn't seem to have `likes` array in the schema I saw earlier?
+    // Let's check the schema I viewed.
+    // Schema: reactions: Map, seenBy: [ObjectId], hideLikeCount: Boolean.
+    // It does NOT have `likes` array in the snippet I saw.
+    // But `getFeed` aggregation adds `commentCount`.
+    // And `PostCard` uses `getReactionSummary` to count reactions.
+
+    let reactionCount = 0;
+    if (post.reactions) {
+      if (post.reactions instanceof Map) {
+        post.reactions.forEach(users => reactionCount += users.length);
+      } else {
+        Object.values(post.reactions).forEach(users => reactionCount += users.length);
+      }
+    }
+    return acc + reactionCount + (post.commentCount || post.comments?.length || 0);
+  }, 0);
+
+  const totalFollowers = me.followers?.length || 0;
 
   return (
     <div className="space-y-8 anim-section">
@@ -161,56 +193,19 @@ export default function Profile({ token }) {
       {/* Tab Content */}
       <div className="min-h-[300px]">
         {activeTab === 'posts' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="space-y-6">
             {posts.map((post, idx) => (
-              <div key={post._id} className="glass-panel overflow-hidden hover-tilt group relative" style={{ animationDelay: `${idx * 0.05}s` }}>
-                <button
-                  onClick={() => handleDeletePost(post._id)}
-                  className="absolute top-2 right-2 p-2 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity z-20 hover:bg-red-500/80"
-                  title="Delete Post"
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                </button>
-
-                {post.imageUrl && (
-                  <div className="relative aspect-square">
-                    <img src={getImageUrl(post.imageUrl)} alt={post.caption} className="w-full h-full object-cover" />
-                    {/* Overlay Stats for Image Posts */}
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-6 text-white">
-                      <div className="flex items-center gap-2">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-                        <span className="font-bold">{post.likes?.length || 0}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
-                        <span className="font-bold">{post.comments?.length || 0}</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                <div className="p-4 space-y-3">
-                  {post.textContent && <p className="text-primary text-sm line-clamp-3">{post.textContent}</p>}
-                  {post.caption && <p className="text-primary text-xs font-medium">{post.caption}</p>}
-
-                  <div className="flex items-center justify-between text-xs text-secondary pt-2 border-t border-white/5">
-                    <span>{new Date(post.createdAt).toLocaleDateString()}</span>
-                    {/* Always visible stats for text posts or below image */}
-                    <div className="flex gap-3">
-                      <span className="flex items-center gap-1 hover:text-primary transition-colors">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-                        {post.likes?.length || 0}
-                      </span>
-                      <span className="flex items-center gap-1 hover:text-primary transition-colors">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
-                        {post.comments?.length || 0}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+              <div key={post._id} style={{ animationDelay: `${idx * 0.05}s` }} className="stagger-item">
+                <PostCard
+                  post={post}
+                  token={token}
+                  me={me}
+                  onUpdate={updatePostState}
+                />
               </div>
             ))}
             {posts.length === 0 && (
-              <div className="col-span-full text-center py-12 text-secondary">
+              <div className="glass-panel p-12 text-center text-secondary">
                 You haven't posted anything yet.
               </div>
             )}
@@ -236,24 +231,18 @@ export default function Profile({ token }) {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="glass-panel p-6 space-y-2">
                 <h4 className="text-secondary text-sm uppercase tracking-wider">Total Reach</h4>
-                <p className="text-3xl font-bold text-primary">2.4K</p>
-                <div className="text-green-400 text-xs flex items-center gap-1">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
-                  +12% vs last month
-                </div>
+                <p className="text-3xl font-bold text-primary">{totalReach}</p>
+                <div className="text-secondary text-xs">Lifetime views</div>
               </div>
               <div className="glass-panel p-6 space-y-2">
                 <h4 className="text-secondary text-sm uppercase tracking-wider">Engagement</h4>
-                <p className="text-3xl font-bold text-primary">856</p>
-                <div className="text-green-400 text-xs flex items-center gap-1">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
-                  +5% vs last month
-                </div>
+                <p className="text-3xl font-bold text-primary">{totalEngagement}</p>
+                <div className="text-secondary text-xs">Reactions & Comments</div>
               </div>
               <div className="glass-panel p-6 space-y-2">
                 <h4 className="text-secondary text-sm uppercase tracking-wider">Followers</h4>
-                <p className="text-3xl font-bold text-primary">128</p>
-                <div className="text-secondary text-xs">Stable</div>
+                <p className="text-3xl font-bold text-primary">{totalFollowers}</p>
+                <div className="text-secondary text-xs">Total audience</div>
               </div>
             </div>
 

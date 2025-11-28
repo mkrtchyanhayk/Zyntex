@@ -11,8 +11,11 @@ import {
   listComments,
   addComment,
   deleteComment,
-  updateLikeVisibility
+  updateLikeVisibility,
+  markSeen
 } from '../controllers/post.controller.js';
+
+import authJwtOptional from '../middleware/authJwtOptional.js';
 
 const router = Router();
 
@@ -24,12 +27,16 @@ const storage = multer.diskStorage({
     cb(null, unique + ext);
   }
 });
-const upload = multer({ storage });
+const upload = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB per file
+});
 
-router.get('/feed', getFeed);
-router.post('/', authJwt, upload.single('image'), createPost);
+router.get('/feed', authJwtOptional, getFeed);
+router.post('/', authJwt, upload.array('images', 10), createPost);
 router.post('/:id/like', authJwt, toggleLike);
 router.post('/:id/react/:emoji', authJwt, reactToPost);
+router.post('/:id/seen', authJwt, markSeen);
 router.get('/:id/reactions', authJwt, getPostReactions);
 router.patch('/:id/visibility', authJwt, updateLikeVisibility);
 router.get('/:id/comments', listComments);

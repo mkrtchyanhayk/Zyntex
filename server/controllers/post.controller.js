@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import Post from '../models/Post.js';
 import Comment from '../models/Comment.js';
 import User from '../models/User.js';
+import Notification from '../models/Notification.js';
 
 const allowedReactions = ['❤️', '👍', '😂', '😮', '😢', '😡', '🔥'];
 
@@ -56,7 +57,7 @@ const applySingleReaction = (post, userId, emoji) => {
 
   if (removedEmoji === emoji) {
     syncLikesFromHearts(post);
-    return;
+    return null;
   }
 
   const updated = [...(map.get(emoji) || [])];
@@ -64,31 +65,79 @@ const applySingleReaction = (post, userId, emoji) => {
   map.set(emoji, updated);
   post.markModified('reactions');
   syncLikesFromHearts(post);
+  return emoji;
 };
 
 export const createPost = async (req, res) => {
   try {
-    const { caption, textContent, hideLikes } = req.body;
-    const imageUrl = req.file ? `/uploads/${req.file.filename}` : req.body.imageUrl || '';
-    if (!imageUrl && !textContent) {
+    const { caption, textContent, hideLikes, mediaType, tags, location, visibility } = req.body;
+
+    // Handle multiple images
+    let images = [];
+    let imageUrl = '';
+
+    if (req.files && req.files.length > 0) {
+      images = req.files.map((file, index) => ({
+        url: `/uploads/${file.filename}`,
+        order: index
+      }));
+      imageUrl = images[0].url; // Backwards compatibility
+    } else if (req.file) {
+      imageUrl = `/uploads/${req.file.filename}`;
+      images = [{ url: imageUrl, order: 0 }];
+    }
+
+    if (images.length === 0 && !textContent) {
       return res.status(400).json({ message: 'Provide an image or text content' });
+    }
+
+    // Parse tags if provided
+    let taggedUsers = [];
+    if (tags) {
+      try {
+        taggedUsers = typeof tags === 'string' ? JSON.parse(tags) : tags;
+      } catch (e) {
+        // Ignore parse errors
+      }
     }
 
     const post = await Post.create({
       imageUrl,
+      images,
       textContent: textContent || '',
       caption: caption || '',
       author: req.userId,
-      hideLikeCount: hideLikes === 'true' || hideLikes === true
+      mediaType: mediaType || (images.length > 1 ? 'carousel' : 'image'),
+      hideLikeCount: hideLikes === 'true' || hideLikes === true,
+      taggedUsers,
+      location: location ? JSON.parse(location) : undefined,
+      visibility: visibility || 'public'
     });
+
     const populated = await post.populate('author', 'username displayName avatarUrl');
+
+    // Notify tagged users
+    if (taggedUsers && taggedUsers.length > 0) {
+      const tagger = await User.findById(req.userId).select('username');
+      for (const tag of taggedUsers) {
+        if (tag.user && tag.user.toString() !== req.userId) {
+          await Notification.create({
+            user: tag.user,
+            title: 'Tagged in Photo',
+            body: `${tagger.username} tagged you in a photo`,
+            link: `/posts/${post._id}`
+          });
+        }
+      }
+    }
+
     res.status(201).json(populated);
   } catch (err) {
     res.status(500).json({ message: 'Failed to create post', error: err.message });
   }
 };
 
-export const getFeed = async (_req, res) => {
+export const getFeed = async (req, res) => {
   try {
     const posts = await Post.aggregate([
       { $sort: { createdAt: -1 } },
@@ -101,6 +150,15 @@ export const getFeed = async (_req, res) => {
         }
       },
       { $unwind: '$author' },
+      {
+        $match: {
+          $or: [
+            { 'author.isPrivate': { $ne: true } },
+            { 'author._id': req.userId ? new mongoose.Types.ObjectId(req.userId) : null },
+            { 'author.followers': req.userId ? new mongoose.Types.ObjectId(req.userId) : null }
+          ]
+        }
+      },
       {
         $lookup: {
           from: 'comments',
@@ -116,13 +174,11 @@ export const getFeed = async (_req, res) => {
       },
       {
         $project: {
-          comments: 0,
-          'author.password': 0,
-          'author.email': 0
+          'author.passwordHash': 0,
+          'comments': 0
         }
       }
     ]);
-
     res.json(posts);
   } catch (err) {
     res.status(500).json({ message: 'Failed to fetch feed', error: err.message });
@@ -131,14 +187,24 @@ export const getFeed = async (_req, res) => {
 
 export const toggleLike = async (req, res) => {
   try {
-    const postId = req.params.id;
-    const userId = req.userId;
-    const post = await Post.findById(postId);
+    const { id } = req.params;
+    const post = await Post.findById(id);
     if (!post) return res.status(404).json({ message: 'Post not found' });
-    applySingleReaction(post, userId, '❤️');
+
+    const added = applySingleReaction(post, req.userId, '❤️');
     await post.save();
-    const populated = await post.populate('author', 'username displayName avatarUrl');
-    res.json(populated);
+
+    if (added && post.author.toString() !== req.userId) {
+      const user = await User.findById(req.userId).select('username');
+      await Notification.create({
+        user: post.author,
+        title: 'New Like',
+        body: `${user.username} liked your post`,
+        link: `/`
+      });
+    }
+
+    res.json(post.likes);
   } catch (err) {
     res.status(500).json({ message: 'Failed to toggle like', error: err.message });
   }
@@ -147,18 +213,29 @@ export const toggleLike = async (req, res) => {
 export const reactToPost = async (req, res) => {
   try {
     const { id, emoji } = req.params;
-    const userId = req.userId;
     if (!allowedReactions.includes(emoji)) {
-      return res.status(400).json({ message: 'Unsupported reaction' });
+      return res.status(400).json({ message: 'Invalid reaction' });
     }
+
     const post = await Post.findById(id);
     if (!post) return res.status(404).json({ message: 'Post not found' });
-    applySingleReaction(post, userId, emoji);
+
+    const added = applySingleReaction(post, req.userId, emoji);
     await post.save();
-    const populated = await post.populate('author', 'username displayName avatarUrl');
-    res.json(populated);
+
+    if (added && post.author.toString() !== req.userId) {
+      const user = await User.findById(req.userId).select('username');
+      await Notification.create({
+        user: post.author,
+        title: 'New Reaction',
+        body: `${user.username} reacted ${emoji} to your post`,
+        link: `/`
+      });
+    }
+
+    res.json(post.reactions);
   } catch (err) {
-    res.status(500).json({ message: 'Failed to react to post', error: err.message });
+    res.status(500).json({ message: 'Failed to react', error: err.message });
   }
 };
 
@@ -167,15 +244,9 @@ export const getPostReactions = async (req, res) => {
     const { id } = req.params;
     const post = await Post.findById(id);
     if (!post) return res.status(404).json({ message: 'Post not found' });
-    const response = [];
-    const entries = post.reactions?.entries ? Array.from(post.reactions.entries()) : Object.entries(post.reactions || {});
-    for (const [emoji, userIds] of entries) {
-      const users = await User.find({ _id: { $in: userIds } }).select('username displayName avatarUrl');
-      response.push({ emoji, count: users.length, users });
-    }
-    res.json(response);
+    res.json(post.reactions);
   } catch (err) {
-    res.status(500).json({ message: 'Failed to fetch reactions', error: err.message });
+    res.status(500).json({ message: 'Failed to get reactions', error: err.message });
   }
 };
 
@@ -212,14 +283,44 @@ export const listComments = async (req, res) => {
 export const addComment = async (req, res) => {
   try {
     const { id } = req.params;
-    const { text } = req.body;
+    const { text, parentId } = req.body;
     if (!text || !text.trim()) {
       return res.status(400).json({ message: 'Comment text required' });
     }
     const post = await Post.findById(id);
     if (!post) return res.status(404).json({ message: 'Post not found' });
-    const comment = await Comment.create({ post: id, author: req.userId, text: text.trim() });
+
+    const comment = await Comment.create({
+      post: id,
+      author: req.userId,
+      text: text.trim(),
+      parentId: parentId || null
+    });
     const populated = await comment.populate('author', 'username displayName avatarUrl');
+
+    if (post.author.toString() !== req.userId) {
+      const user = await User.findById(req.userId).select('username');
+      await Notification.create({
+        user: post.author,
+        title: 'New Comment',
+        body: `${user.username} commented on your post`,
+        link: `/`
+      });
+    }
+
+    if (parentId) {
+      const parentComment = await Comment.findById(parentId);
+      if (parentComment && parentComment.author.toString() !== req.userId) {
+        const user = await User.findById(req.userId).select('username');
+        await Notification.create({
+          user: parentComment.author,
+          title: 'New Reply',
+          body: `${user.username} replied to your comment`,
+          link: `/`
+        });
+      }
+    }
+
     res.status(201).json(populated);
   } catch (err) {
     res.status(500).json({ message: 'Failed to add comment', error: err.message });
@@ -241,3 +342,18 @@ export const deleteComment = async (req, res) => {
   }
 };
 
+export const markSeen = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.userId;
+    if (!userId) return res.json({ success: true });
+
+    await Post.updateOne(
+      { _id: id },
+      { $addToSet: { seenBy: userId } }
+    );
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to mark seen', error: err.message });
+  }
+};

@@ -13,6 +13,7 @@ import useMe from './hooks/useMe';
 import useTheme from './hooks/useTheme';
 import Spinner from './components/Spinner';
 import Changelog from './components/Changelog';
+import NotificationsDropdown from './components/NotificationsDropdown';
 import api from './api';
 import { getImageUrl } from './utils/imageUrl';
 
@@ -23,6 +24,7 @@ export default function App() {
   const { me, loading: meLoading } = useMe(!!token);
   const [inviteCounts, setInviteCounts] = useState({ total: 0, dm: 0, group: 0 });
   const [showChangelog, setShowChangelog] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
   const [theme, setTheme] = useTheme();
 
   useEffect(() => {
@@ -133,6 +135,19 @@ export default function App() {
             ))}
           </nav>
           <div className="flex items-center gap-3">
+            {token && (
+              <div className="relative">
+                <button
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="p-2 rounded-full border border-white/20 hover:bg-white/10 transition-all text-secondary hover:text-primary relative"
+                  title="Notifications"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                  {/* Optional: Add red dot if unread */}
+                </button>
+                {showNotifications && <NotificationsDropdown onClose={() => setShowNotifications(false)} />}
+              </div>
+            )}
             <button
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
               className="p-2 rounded-full border border-white/20 hover:bg-white/10 transition-all text-secondary hover:text-primary"
